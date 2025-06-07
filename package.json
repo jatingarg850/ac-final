@@ -9,7 +9,8 @@
     "lint": "eslint . --fix",
     "preview": "vite preview",
     "start": "vite preview",
-    "clean": "rimraf node_modules package-lock.json dist"
+    "clean": "rimraf node_modules package-lock.json dist",
+    "vercel-build": "vite build"
   },
   "dependencies": {
     "firebase": "^10.7.1",
