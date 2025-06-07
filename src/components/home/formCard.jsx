@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Button from '../commonComponents/button'; // Fixed the path to the Button component
+import Button from '../commonComponents/button';
 
 const FormCard = () => {
     const [formData, setFormData] = useState({
@@ -9,19 +9,63 @@ const FormCard = () => {
         address: '',
         service: '',
     });
+    const [status, setStatus] = useState({ type: '', message: '' });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form Data Submitted:', formData);
+        setIsSubmitting(true);
+        setStatus({ type: '', message: '' });
+
+        try {
+            const response = await fetch('https://actext-c24df4a0ce27.herokuapp.com/api/service-requests', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    full_name: formData.fullName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    address: formData.address,
+                    service_type: formData.service,
+                    status: 'pending'
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit request');
+            }
+
+            const data = await response.json();
+            setStatus({ type: 'success', message: 'Service request submitted successfully!' });
+            setFormData({
+                fullName: '',
+                email: '',
+                phone: '',
+                address: '',
+                service: '',
+            });
+        } catch (error) {
+            setStatus({ type: 'error', message: 'Failed to submit request. Please try again.' });
+            console.error('Error submitting form:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
         <div className="form-card">
+            {status.message && (
+                <div className={`alert ${status.type === 'success' ? 'alert-success' : 'alert-error'}`}>
+                    {status.message}
+                </div>
+            )}
             <form onSubmit={handleSubmit}>
                 <div className="form-row">
                     <div className="form-group">
@@ -89,7 +133,11 @@ const FormCard = () => {
                     </div>
                 </div>
                 <div className="form-submit">
-                    <Button text="Book Now" className="default-button" />
+                    <Button 
+                        text={isSubmitting ? "Submitting..." : "Book Now"} 
+                        className="default-button"
+                        disabled={isSubmitting}
+                    />
                 </div>
             </form>
         </div>

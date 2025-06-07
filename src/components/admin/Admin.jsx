@@ -5,7 +5,8 @@ import '../../../src/index.css';
 
 const Admin = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('inquiries');
+    const [activeTab, setActiveTab] = useState('service-requests');
+    const [serviceRequests, setServiceRequests] = useState([]);
     const [buyerInquiries, setBuyerInquiries] = useState([]);
     const [users, setUsers] = useState([]);
     const [acListings, setAcListings] = useState([]);
@@ -27,6 +28,7 @@ const Admin = () => {
         try {
             setLoading(true);
             await Promise.all([
+                fetchServiceRequests(),
                 fetchBuyerInquiries(),
                 fetchUsers(),
                 fetchAcListings()
@@ -35,6 +37,17 @@ const Admin = () => {
             setError('Failed to fetch data');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchServiceRequests = async () => {
+        try {
+            const response = await fetch('https://actext-c24df4a0ce27.herokuapp.com/api/service-requests');
+            if (!response.ok) throw new Error('Failed to fetch service requests');
+            const data = await response.json();
+            setServiceRequests(data);
+        } catch (err) {
+            console.error('Error fetching service requests:', err);
         }
     };
 
@@ -76,6 +89,25 @@ const Admin = () => {
         // Add AC listing logic here
     };
 
+    const updateServiceStatus = async (id, newStatus) => {
+        try {
+            const response = await fetch(`https://actext-c24df4a0ce27.herokuapp.com/api/service-requests/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+
+            if (!response.ok) throw new Error('Failed to update status');
+            
+            // Refresh the service requests
+            await fetchServiceRequests();
+        } catch (err) {
+            console.error('Error updating service request:', err);
+        }
+    };
+
     if (loading) {
         return <div className="admin-loading">Loading...</div>;
     }
@@ -97,6 +129,12 @@ const Admin = () => {
 
             <div className="admin-tabs">
                 <button 
+                    className={`tab ${activeTab === 'service-requests' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('service-requests')}
+                >
+                    Service Requests
+                </button>
+                <button 
                     className={`tab ${activeTab === 'inquiries' ? 'active' : ''}`}
                     onClick={() => setActiveTab('inquiries')}
                 >
@@ -117,6 +155,51 @@ const Admin = () => {
             </div>
 
             <div className="admin-content">
+                {activeTab === 'service-requests' && (
+                    <div className="service-requests-section">
+                        <h2>Service Requests</h2>
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Service</th>
+                                        <th>Address</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {serviceRequests.map((request) => (
+                                        <tr key={request.id}>
+                                            <td>{request.full_name}</td>
+                                            <td>{request.email}</td>
+                                            <td>{request.phone}</td>
+                                            <td>{request.service_type}</td>
+                                            <td>{request.address}</td>
+                                            <td>{request.status}</td>
+                                            <td>
+                                                <select
+                                                    value={request.status}
+                                                    onChange={(e) => updateServiceStatus(request.id, e.target.value)}
+                                                    className="status-select"
+                                                >
+                                                    <option value="pending">Pending</option>
+                                                    <option value="in-progress">In Progress</option>
+                                                    <option value="completed">Completed</option>
+                                                    <option value="cancelled">Cancelled</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
                 {activeTab === 'inquiries' && (
                     <div className="inquiries-section">
                         <h2>Buyer Inquiries</h2>
