@@ -14,7 +14,7 @@ const Navbar = () => {
     password: ''
   });
   const [signupData, setSignupData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: ''
   });
@@ -169,7 +169,7 @@ const Navbar = () => {
                 'Accept': 'application/json'
             },
             body: JSON.stringify({
-                name: signupData.name,
+                username: signupData.username,
                 email: signupData.email,
                 password: signupData.password,
                 is_admin: false // Default to non-admin user
@@ -302,10 +302,10 @@ const Navbar = () => {
                   <br />
                   <input 
                     type="text" 
-                    name="name"
+                    name="username"
                     className="auth-input" 
-                    placeholder="Name" 
-                    value={signupData.name}
+                    placeholder="Username" 
+                    value={signupData.username}
                     onChange={handleSignupChange}
                     required
                   />
